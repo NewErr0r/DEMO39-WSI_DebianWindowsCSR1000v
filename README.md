@@ -193,6 +193,67 @@ Restart-Computer
     <h4>RTR-R</h4>
     <pre>interface Tunnel1<br>ip address 10.20.30.2 255.255.255.252<br>tunnel mode gre ip<br>tunnel source 5.5.5.100<br>tunnel destination 4.4.4.100</pre>
     <pre>router bgp 65002<br>neighbor 10.20.30.1 remote-as 65001<br>network 10.20.30.0 mask 255.255.255.252<br>network 172.16.100.0 mask 255.255.255.0</pre>
+    <h4>RTR-L</h4>
+    <pre>crypto isakmp policy 1<br>encryption aes<br>authentication pre-share<br>hash sha256<br>group14<br>exit<br><br>crypto isakmp key P@ssw0rd address 5.5.5.100<br>crypto isakmp nat keepalive 5<br><br>crypto ipsec transform-set TSET  esp-aes 256 esp-sha256-hmac<br>mode tunnel<br>exit<br><br>crypto ipsec profile VTI<br>set transform-set TSET<br>exit</pre>
+    <pre>interface Tunnel1<br>tunnel mode ipsec ipv4<br>tunnel protection ipsec profile VTI</pre>
+    <h4>RTR-R</h4>
+<pre>crypto isakmp policy 1<br>encryption aes<br>authentication pre-share<br>hash sha256<br>group14<br>exit<br><br>crypto isakmp key P@ssw0rd address 4.4.4.100<br>crypto isakmp nat keepalive 5<br><br>crypto ipsec transform-set TSET  esp-aes 256 esp-sha256-hmac<br>mode tunnel<br>exit<br><br>crypto ipsec profile VTI<br>set transform-set TSET<br>exit</pre>
+    <pre>interface Tunnel1<br>tunnel mode ipsec ipv4<br>tunnel protection ipsec profile VTI</pre>
     </ul>
 </ul>
 <ul>
+    <li>Платформа управления трафиком RTR-L выполняет контроль входящего трафика согласно следующим правилам:</li>
+    <ul>
+        <li>Разрешаются подключения к портам DNS, HTTP и HTTPS для всех клиентов;</li>
+        <ul>
+            <li>Порты необходимо для работы настраиваемых служб</li>
+        </ul>
+        <li>Разрешается работа выбранного протокола организации защищенной связи;</li>
+        <ul>
+            <li>Разрешение портов должно быть выполнено по принципу “необходимо и достаточно”</li>
+        </ul>
+        <li>Разрешается работа протоколов ICMP;</li>
+        <li>Разрешается работа протокола SSH;</li>
+        <li>Прочие подключения запрещены;</li>
+        <li>Для обращений в платформам со стороны хостов, находящихся внутри регионов, ограничений быть не должно;</li>
+        <h4>RTR-L</h4>
+        <pre>ip access-list extended LEFT<br><br>permit tcp any any established<br>permit udp host 4.4.4.100 eq 53 any<br>permit udp host 5.5.5.1 eq 123 any<br>permit tcp any host 4.4.4.100 eq 80 <br>permit tcp any host 4.4.4.100 eq 443 <br>permit tcp any host 4.4.4.100 eq 2222 <br><br>permit udp host 5.5.5.100 host 4.4.4.100 eq 500<br>permit esp any any<br>permit icmp any any<br>exit</pre>
+        <pre>interface Gi1<br>ip access-group LEFT in</pre>
+    </ul>
+    <li>Платформа управления трафиком RTR-R выполняет контроль входящего трафика согласно следующим правилам:</li>
+    <ul>
+        <li>Разрешаются подключения к портам HTTP и HTTPS для всех клиентов;</li>
+        <ul>
+            <li>Порты необходимо для работы настраиваемых служб</li>
+        </ul>
+        <li>Разрешается работа выбранного протокола организации защищенной связи;</li>
+        <ul>
+            <li>Разрешение портов должно быть выполнено по принципу “необходимо и достаточно”</li>
+        </ul>
+        <li>Разрешается работа протоколов ICMP;</li>
+        <li>Разрешается работа протокола SSH;</li>
+        <li>Прочие подключения запрещены;</li>
+        <li>Для обращений в платформам со стороны хостов, находящихся внутри регионов, ограничений быть не должно;</li>
+        <h4>RTR-R</h4>
+        <pre>ip access-list extended RIGHT<br><br>permit tcp any any established<br>permit tcp any host 5.5.5.100 eq 80 <br>permit tcp any host 5.5.5.100 eq 443 <br>permit tcp any host 5.5.5.100 eq 2244 <br><br>permit udp host 4.4.4.100 host 5.5.5.100 eq 500<br>permit esp any any<br>permit icmp any any<br>exit</pre> 
+        <pre>interface Gi1<br>ip access-group RIGHT in</pre>
+    </ul>
+</ul>
+<ul>
+    <li>Обеспечьте настройку служб SSH региона Left:</li>
+    <ul>
+        <li>Подключения со стороны внешних сетей по протоколу к платформе управления трафиком RTR-L на порт 2222 должны быть перенаправлены на ВМ Web-L;</li>
+        <li>Подключения со стороны внешних сетей по протоколу к платформе управления трафиком RTR-R на порт 2244 должны быть перенаправлены на ВМ Web-R;</li>
+        <h4>RTR-L</h4>
+        <pre>ip nat inside source static tcp 192.168.100.100 22 4.4.4.100 2222</pre>
+        <h4>RTR-R</h4>
+        <pre>ip nat inside source static tcp 172.16.100.100 22 5.5.5.100 2244</pre>
+        <h4>WEB-L</h4>
+        <pre>vi /etc/ssh/sshd_config<br>...<br>PermitRootLogin yes<br>...</pre>
+        <pre>systemctl restart sshd</pre>
+        <h4>WEB-R</h4>
+        <pre>vi /etc/ssh/sshd_config<br>...<br>PermitRootLogin yes<br>...</pre>
+        <pre>systemctl restart sshd</pre>
+    </ul>
+</ul>
+
