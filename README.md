@@ -262,7 +262,7 @@ Restart-Computer
 
 <h1>Таблица 2. DNS-записи зон</h1>
 
-![Image alt](https://github.com/NewErr0r/39-WSI/blob/main/table_dns.png?raw=true)
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/table_dns.png?raw=true)
 
 <ul>
     <li>Выполните настройку первого уровня DNS-системы стенда:</li>
@@ -279,4 +279,62 @@ Restart-Computer
         </ul>
         <li>Внешний клиент CLI должен использовать DNS-службу, развернутую на ISP, по умолчанию;</li>
         <h4>ISP</h4>
+        <pre>apt install bind9 -y</pre>
+        <pre>mkdir /opt/dns<br>cp /etc/bind/db.local /opt/dns/demo.db<br>chown -R bind:bind /opt/dns</pre>
+        <pre>vi /etc/apparmor.d/usr.sbin.named<br>...<br>/opt/dns/** rw,<br>...</pre>
+        <pre>systemctl restart apparmor.service</pre>
+        <pre>vi /etc/bind/named.conf.options<br>options {
+            directory "/var/cache/bind";
+            dnssec-validation no;
+            allow-query { any; };
+            listen-on-v6 { any; };
+        };</pre>
+        <pre>vi /etc/bind/named.conf.default-zones<br>zone "demo.wsr" {
+            type master;
+            allow-transfer { any; };
+            file "/opt/dns/demo.db";
+        };</pre>
+        <pre>vi /opt/dns/demo.db</pre>
+        
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/demo.db.png?raw=true)
+
+</pre>
+<pre>systemctl restatr bind9</pre>
+    <h4>RTR-L</h4>
+    <pre>ip nat inside source static tcp 192.168.100.200 53 4.4.4.100 53<br>ip nat inside source static udp 192.168.100.200 53 4.4.4.100 53</pre>
+    </ul>
+</ul>
+   <ul>
+        <li>Выполните настройку второго уровня DNS-системы стенда;</li>
+        <ul>
+            <li>Используется ВМ SRV;</li>
+            <li>Обслуживается зона int.demo.wsr;</li>
+            <ul>
+                <li>Наполнение зоны должно быть реализовано в соответствии с Таблицей 2;</li>
+            </ul>
+            <li>Обслуживаются обратные зоны для внутренних адресов регионов</li>
+            <ul>
+                <li>Имена для разрешения обратных записей следует брать из Таблицы 2;</li>
+            </ul>
+            <li>Сервер принимает рекурсивные запросы, исходящие от адресов внутренних регионов;</li>
+            <ul>
+                <li>Обслуживание клиентов(внешних и внутренних), обращающихся к зоне int.demo.wsr, должно производиться без каких-либо ограничений по адресу источника;</li>
+            </ul>
+            <li>Внутренние хосты регионов (равно как и платформы управления трафиком) должны использовать данную DNS-службу для разрешения всех запросов имен;</li>
+            <h4>SRV</h4>
+            <pre>Install-WindowsFeature -Name DNS -IncludeManagementTools</pre>
+            <pre>Add-DnsServerPrimaryZone -Name "int.demo.wsr" -ZoneFile "int.demo.wsr.dns"</pre>
+            <pre>Add-DnsServerPrimaryZone -NetworkId 192.168.100.0/24 -ZoneFile "int.demo.wsr.dns"<br>Add-DnsServerPrimaryZone -NetworkId 172.16.100.0/24 -ZoneFile "int.demo.wsr.dns"</pre>
+            <pre>Add-DnsServerResourceRecordA -Name "web-l" -ZoneName "int.demo.wsr" -AllowUpdateAny -IPv4Address "192.168.100.100" -CreatePtr <br>Add-DnsServerResourceRecordA -Name "web-r" -ZoneName "int.demo.wsr" -AllowUpdateAny -IPv4Address "172.16.100.100" -CreatePtr <br>Add-DnsServerResourceRecordA -Name "srv" -ZoneName "int.demo.wsr" -AllowUpdateAny -IPv4Address "192.168.100.200" -CreatePtr <br>Add-DnsServerResourceRecordA -Name "rtr-l" -ZoneName "int.demo.wsr" -AllowUpdateAny -IPv4Address "192.168.100.254" -CreatePtr <br>Add-DnsServerResourceRecordA -Name "rtr-r" -ZoneName "int.demo.wsr" -AllowUpdateAny -IPv4Address "172.16.100.254" -CreatePtr</pre>
+            <pre>Add-DnsServerResourceRecordCName -Name "ntp" -HostNameAlias "srv.int.demo.wsr" -ZoneName "int.demo.wsr"<br>Add-DnsServerResourceRecordCName -Name "dns" -HostNameAlias "srv.int.demo.wsr" -ZoneName "int.demo.wsr"</pre>
+            
+            
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/int.demo.wsr.db.png?raw=true)
+            
+<h4>RTR-L</h4>
+<pre>ip name-server 192.168.100.200<br>ip domain name int.demo.wsr</pre>
+<h4>RTR-R</h4>
+<pre>ip name-server 192.168.100.200<br>ip domain name int.demo.wsr</pre>
+            
+</ul></ul>
         
