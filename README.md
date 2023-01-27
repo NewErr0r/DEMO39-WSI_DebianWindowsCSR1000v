@@ -217,7 +217,7 @@ Restart-Computer
         <li>Прочие подключения запрещены;</li>
         <li>Для обращений в платформам со стороны хостов, находящихся внутри регионов, ограничений быть не должно;</li>
         <h4>RTR-L</h4>
-        <pre>ip access-list extended LEFT<br><br>permit tcp any any established<br>permit udp host 4.4.4.100 eq 53 any<br>permit udp host 5.5.5.1 eq 123 any<br>permit tcp any host 4.4.4.100 eq 80 <br>permit tcp any host 4.4.4.100 eq 443 <br>permit tcp any host 4.4.4.100 eq 2222 <br><br>permit udp host 5.5.5.100 host 4.4.4.100 eq 500<br>permit esp any any<br>permit icmp any any<br>exit</pre>
+        <pre>ip access-list extended LEFT<br><br>permit tcp any any established<br>permit udp any eq 53 any<br>permit udp host 5.5.5.1 eq 123 any<br>permit tcp any host 4.4.4.100 eq 80 <br>permit tcp any host 4.4.4.100 eq 443 <br>permit tcp any host 4.4.4.100 eq 2222 <br><br>permit udp host 5.5.5.100 host 4.4.4.100 eq 500<br>permit esp any any<br>permit icmp any any<br>exit</pre>
         <pre>interface Gi1<br>ip access-group LEFT in</pre>
     </ul>
     <li>Платформа управления трафиком RTR-R выполняет контроль входящего трафика согласно следующим правилам:</li>
@@ -235,7 +235,7 @@ Restart-Computer
         <li>Прочие подключения запрещены;</li>
         <li>Для обращений в платформам со стороны хостов, находящихся внутри регионов, ограничений быть не должно;</li>
         <h4>RTR-R</h4>
-        <pre>ip access-list extended RIGHT<br><br>permit tcp any any established<br>permit tcp any host 5.5.5.100 eq 80 <br>permit tcp any host 5.5.5.100 eq 443 <br>permit tcp any host 5.5.5.100 eq 2244 <br><br>permit udp host 4.4.4.100 host 5.5.5.100 eq 500<br>permit esp any any<br>permit icmp any any<br>exit</pre> 
+        <pre>ip access-list extended RIGHT<br><br>permit tcp any any established<br>permit udp any eq 53 any<br>permit tcp any host 5.5.5.100 eq 80 <br>permit tcp any host 5.5.5.100 eq 443 <br>permit tcp any host 5.5.5.100 eq 2244 <br><br>permit udp host 4.4.4.100 host 5.5.5.100 eq 500<br>permit esp any any<br>permit icmp any any<br>exit</pre> 
         <pre>interface Gi1<br>ip access-group RIGHT in</pre>
     </ul>
 </ul>
