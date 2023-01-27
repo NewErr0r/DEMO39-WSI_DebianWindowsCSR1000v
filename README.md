@@ -337,4 +337,62 @@ Restart-Computer
 <pre>ip name-server 192.168.100.200<br>ip domain name int.demo.wsr</pre>
             
 </ul></ul>
+
+ <ul>
+        <li>Выполните настройку первого уровня системы синхронизации времени:</li>
+        <ul>
+            <li>Используется сервер ISP.</li>
+            <li>Сервер считает собственный источник времени верным, stratum=4;</li>
+            <li>Сервер допускает подключение только через внешний адрес соответствующей платформы управления трафиком;</li>
+            <ul>
+                <li>Подразумевается обращение SRV для синхронизации времени;</li>
+            </ul>
+            <li>Клиент CLI должен использовать службу времени ISP;</li>
+            <h4>ISP</h4>
+            <pre>apt install -y chrony</pre>
+            <pre>vi /etc/chrony/chrony.conf<br>
+            local stratum 4
+            allow 4.4.4.0/24
+            allow 3.3.3.0/24</pre>
+            <pre>systemctl restart chronyd</pre>
+            <h4>CLI</h4>
+            <pre>New-NetFirewallRule -DisplayName "NTP" -Direction Inbound -LocalPort 123 -Protocol UDP -Action Allow</pre>
+            <pre>Start-Service W32Time<br>w32tm /config /manualpeerlist:4.4.4.1 /syncfromflags:manual /reliable:yes /update<br>Restart-Service W32Time</pre>
+            <pre>Set-Service -Name W32Time -StartupType Automatic</pre>
+        </ul>
+    </ul>
+        <ul>
+    <li>Выполните конфигурацию службы второго уровня времени на SRV.</li>
+        <ul>
+            <li>Сервер синхронизирует время с хостом ISP;</li>
+            <ul>
+                <li>Синхронизация с другими источникам запрещена;</li>
+            </ul>
+            <li>Сервер должен допускать обращения внутренних хостов регионов, в том числе и платформ управления трафиком, для синхронизации времени;</li>
+            <li>Все внутренние хосты(в том числе и платформы управления трафиком) должны синхронизировать свое время с SRV;</li>
+            <h4>SRV</h4>
+            <pre>New-NetFirewallRule -DisplayName "NTP" -Direction Inbound -LocalPort 123 -Protocol UDP -Action Allow</pre>
+            <pre>w32tm /query /status<br>Start-Service W32Time<br>w32tm /config /manualpeerlist:4.4.4.1 /syncfromflags:manual /reliable:yes /update<br>Restart-Service W32Time</pre>
+            <h4>RTR-L</h4>
+            <pre>ntp server ntp.int.demo.wsr</pre>
+            <h4>RTR-R</h4>
+            <pre>ntp server ntp.int.demo.wsr</pre>
+            <h4>WEB-L</h4>
+            <pre>apt install -y chrony</pre>
+            <pre>vi /etc/chrony/chrony.conf<br>
+            #pool 2.debian.pool.ntp.org iburst
+            pool ntp.int.demo.wsr iburst
+            allow 192.168.100.0/24
+            </pre>
+            <pre>systemctl restart chronyd</pre>
+            <h4>WEB-R</h4>
+            <pre>apt install -y chrony</pre>
+            <pre>vi /etc/chrony/chrony.conf<br>
+            #pool 2.debian.pool.ntp.org iburst
+            pool ntp.int.demo.wsr iburst
+            allow 172.16.100.0/24
+            </pre>
+            <pre>systemctl restart chronyd</pre>         
+        </ul>
+    </ul>
         
