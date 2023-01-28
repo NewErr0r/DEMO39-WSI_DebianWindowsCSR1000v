@@ -396,3 +396,55 @@ Restart-Computer
         </ul>
     </ul>
         
+<ul>
+    <li>Реализуйте файловый SMB-сервер на базе SRV</li>
+    <ul>
+        <li>Сервер должен предоставлять доступ для обмена файлами серверам WEB-L и WEB-R;</li>
+        <li>Сервер, в зависимости от ОС, использует следующие каталоги для хранения файлов:</li>
+        <ul>
+            <li>/mnt/storage для система на базе Linux;</li>
+            <li>Диск R:\ для систем на базе Windows;</li>
+        </ul>
+        <li>Хранение файлов осуществляется на диске (смонтированном по указанным выше адресам), реализованном по технологии RAID типа “Зеркало”;</li>
+        <h4>SRV (RAID1)</h4>
+        
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/RAID1_1.png?raw=true)
+      
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/RAID1_2.png?raw=true)
+      
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/RAID1_3.png?raw=true)
+        
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/RAID1_4.png?raw=true)
+
+ <h4>SRV (SMB)</h4>
+        
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/SMB_1.png?raw=true)
+
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/SMB_2.png?raw=true)
+
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/SMB_3.png?raw=true)
+
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/SMB_4.png?raw=true)
+
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/SMB_5.png?raw=true)
+
+![Image alt](https://github.com/NewErr0r/DEMO39-WSI_DebianWindowsCSR1000v/blob/main/images/SMB_6.png?raw=true)
+ 
+ </ul></ul>
+ 
+ <ul>
+    <li>Сервера WEB-L и WEB-R должны использовать службу, настроенную на SRV, для обмена файлами между собой:</li>
+    <ul>
+        <li>Служба файлового обмена должна позволять монтирование в виде стандартного каталога Linux;</li>
+        <ul>
+            <li>Разделяемый каталог должен быть смонтирован по адресу /opt/share;</li>
+        </ul>
+        <li>Каталог должен позволять удалять и создавать файлы в нем для всех пользователей;</li>
+        <h4>WEB-L</h4>
+        <pre>apt install -y cifs-utils</pre>
+        <pre>mkdir /opt/share<br>chmod 777 /opt/share<br>echo //srv.int.demo.wsr/storage /opt/share cifs guest 0 0 >> /etc/fstab<br>mount -a</pre>
+        <h4>WEB-R</h4>
+        <pre>apt install -y cifs-utils</pre>
+        <pre>mkdir /opt/share<br>chmod 777 /opt/share<br>echo //srv.int.demo.wsr/storage /opt/share cifs guest 0 0 >> /etc/fstab<br>mount -a</pre>
+    </ul>
+</ul>
