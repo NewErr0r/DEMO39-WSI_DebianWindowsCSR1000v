@@ -442,9 +442,9 @@ Restart-Computer
         <li>Каталог должен позволять удалять и создавать файлы в нем для всех пользователей;</li>
         <h4>WEB-L</h4>
         <pre>apt install -y cifs-utils</pre>
-        <pre>mkdir /opt/share<br>chmod 777 /opt/share<br>echo //srv.int.demo.wsr/storage /opt/share cifs guest 0 0 >> /etc/fstab<br>mount -a</pre>
+        <pre>mkdir /opt/share<br>chmod 777 /opt/share<br>echo //srv.int.demo.wsr/share /opt/share cifs guest 0 0 >> /etc/fstab<br>mount -a</pre>
         <h4>WEB-R</h4>
         <pre>apt install -y cifs-utils</pre>
-        <pre>mkdir /opt/share<br>chmod 777 /opt/share<br>echo //srv.int.demo.wsr/storage /opt/share cifs guest 0 0 >> /etc/fstab<br>mount -a</pre>
+        <pre>mkdir /opt/share<br>chmod 777 /opt/share<br>echo //srv.int.demo.wsr/share /opt/share cifs guest 0 0 >> /etc/fstab<br>mount -a</pre>
     </ul>
 </ul>
